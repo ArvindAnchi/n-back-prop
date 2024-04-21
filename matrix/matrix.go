@@ -112,6 +112,21 @@ func (m *Mat) Row(rowIdx int) *Mat {
 	}
 }
 
+func (m *Mat) Copy(src *Mat) {
+	if m.rows != src.rows {
+		panic(fmt.Sprintf("MAT_COPY: Expected shape:(%d %d) got (%d %d)", m.rows, m.cols, src.rows, src.cols))
+	}
+	if m.cols != src.cols {
+		panic(fmt.Sprintf("MAT_COPY: Expected shape:(%d %d) got (%d %d)", m.rows, m.cols, src.rows, src.cols))
+	}
+
+	for i := 0; i < m.rows; i++ {
+		for j := 0; j < m.cols; j++ {
+			src.es[src.IdxOf(i, j)] = m.es[m.IdxOf(i, j)]
+		}
+	}
+}
+
 func (m *Mat) Sum(b *Mat) {
 	if m.rows != b.rows {
 		panic(fmt.Sprintf("MAT_SUM: Expected dest:shape:(%d %d) got (%d %d)", m.rows, m.cols, b.rows, b.cols))
