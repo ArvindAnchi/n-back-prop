@@ -7,6 +7,7 @@ import (
 )
 
 type Mat struct {
+	name string
 	rows int
 	cols int
 	es   *[]float32
@@ -16,10 +17,11 @@ func sigmoid(x float32) float32 {
 	return 1 / float32(1+math.Exp(float64(-x)))
 }
 
-func NewMat(rows, cols int) *Mat {
+func NewMat(rows, cols int, name string) *Mat {
 	es := make([]float32, rows*cols)
 
 	return &Mat{
+		name: name,
 		rows: rows,
 		cols: cols,
 		es:   &es,
@@ -39,13 +41,17 @@ func (m *Mat) IdxOf(i, j int) int {
 }
 
 func (m *Mat) Print() {
+	fmt.Printf("%s = [\n", m.name)
+
 	for i := 0; i < m.rows; i++ {
 		for j := 0; j < m.cols; j++ {
-			fmt.Printf("%f ", m.At(i, j))
+			fmt.Printf("\t%f ", m.At(i, j))
 		}
 
 		fmt.Printf("\n")
 	}
+
+	fmt.Print("]\n")
 }
 
 func (m *Mat) Sigmoid() {
