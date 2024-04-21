@@ -10,7 +10,7 @@ type Mat struct {
 	name string
 	rows int
 	cols int
-	es   *[]float32
+	es   []float32
 }
 
 func sigmoid(x float32) float32 {
@@ -24,16 +24,16 @@ func NewMat(rows, cols int, name string) *Mat {
 		name: name,
 		rows: rows,
 		cols: cols,
-		es:   &es,
+		es:   es,
 	}
 }
 
 func (m *Mat) Set(i, j int, val float32) {
-	(*m.es)[i*m.cols+j] = val
+	m.es[i*m.cols+j] = val
 }
 
 func (m *Mat) At(i, j int) float32 {
-	return (*m.es)[i*m.cols+j]
+	return m.es[i*m.cols+j]
 }
 
 func (m *Mat) IdxOf(i, j int) int {
@@ -57,7 +57,7 @@ func (m *Mat) Print() {
 func (m *Mat) Sigmoid() {
 	for i := 0; i < m.rows; i++ {
 		for j := 0; j < m.cols; j++ {
-			(*m.es)[m.IdxOf(i, j)] = sigmoid(m.At(i, j))
+			m.es[m.IdxOf(i, j)] = sigmoid(m.At(i, j))
 		}
 	}
 }
@@ -65,7 +65,7 @@ func (m *Mat) Sigmoid() {
 func (m *Mat) Fill(val float32) {
 	for i := 0; i < m.rows; i++ {
 		for j := 0; j < m.cols; j++ {
-			(*m.es)[m.IdxOf(i, j)] = val
+			m.es[m.IdxOf(i, j)] = val
 		}
 	}
 }
@@ -73,7 +73,7 @@ func (m *Mat) Fill(val float32) {
 func (m *Mat) Rand(low, high float32) {
 	for i := 0; i < m.rows; i++ {
 		for j := 0; j < m.cols; j++ {
-			(*m.es)[m.IdxOf(i, j)] = rand.Float32()*(high-low) + low
+			m.es[m.IdxOf(i, j)] = rand.Float32()*(high-low) + low
 		}
 	}
 }
@@ -91,12 +91,24 @@ func (m *Mat) Dot(a, b *Mat) {
 
 	for i := 0; i < m.rows; i++ {
 		for j := 0; j < m.cols; j++ {
-			(*m.es)[m.IdxOf(i, j)] = 0
+			m.es[m.IdxOf(i, j)] = 0
 
 			for k := 0; k < a.cols; k++ {
-				(*m.es)[m.IdxOf(i, j)] += a.At(i, k) * b.At(k, j)
+				m.es[m.IdxOf(i, j)] += a.At(i, k) * b.At(k, j)
 			}
 		}
+	}
+}
+
+func (m *Mat) Row(rowIdx int) *Mat {
+	sIdx := m.IdxOf(rowIdx, 0)
+	eIdx := sIdx + m.cols
+
+	return &Mat{
+		name: fmt.Sprintf("%s[%d:%d]", m.name, sIdx, eIdx),
+		rows: 1,
+		cols: m.cols,
+		es:   m.es[sIdx:eIdx],
 	}
 }
 
@@ -111,7 +123,7 @@ func (m *Mat) Sum(b *Mat) {
 
 	for i := 0; i < m.rows; i++ {
 		for j := 0; j < m.cols; j++ {
-			(*m.es)[m.IdxOf(i, j)] += (*b.es)[b.IdxOf(i, j)]
+			m.es[m.IdxOf(i, j)] += b.es[b.IdxOf(i, j)]
 		}
 	}
 }
