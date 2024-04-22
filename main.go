@@ -23,10 +23,54 @@ func (m *XORModel) forward() {
 	m.a2.Sigmoid()
 }
 
-func cost() {
+func (m *XORModel) cost(ti Mat, to Mat) float32 {
+	if ti.Rows != to.Rows {
+		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", to.Rows, m.a2.Cols, ti.Rows, ti.Cols))
+	}
+	if to.Cols != m.a2.Cols {
+		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", to.Rows, m.a2.Cols, to.Rows, to.Cols))
+	}
+
+	n := ti.Rows
+	var c float32 = 0
+
+	for i := 0; i < n; i++ {
+		x := ti.Row(i)
+		y := to.Row(i)
+
+		m.a0.Copy(x)
+		m.forward()
+
+		q := to.Cols
+
+		for j := 0; j < q; j++ {
+			d := m.a2.At(0, j) - y.At(0, j)
+			c += d * d
+		}
+	}
+
+	return c / float32(n)
 }
 
 func main() {
+	td := []float32{
+		0, 0, 0,
+		0, 1, 1,
+		1, 0, 1,
+		1, 1, 0,
+	}
+
+	stride := 3
+	n := len(td) / stride
+
+	ti := NewMat(n, 2, "ti")
+	ti.SetStride(stride)
+	ti.SetArr(td)
+
+	to := NewMat(n, 1, "to")
+	to.SetStride(stride)
+	to.SetArr(td[2:])
+
 	var m XORModel
 
 	m.a0 = NewMat(1, 2, "x")
@@ -47,9 +91,7 @@ func main() {
 	m.a0.Set(0, 0, 0)
 	m.a0.Set(0, 1, 1)
 
-	m.w1.Print()
-	m.w1.Row(0).Print()
-	m.w1.Row(1).Print()
+	fmt.Printf("cost = %f\n", m.cost(*ti, *to))
 
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 2; j++ {
