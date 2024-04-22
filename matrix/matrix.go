@@ -7,10 +7,11 @@ import (
 )
 
 type Mat struct {
-	name string
-	rows int
-	cols int
-	es   []float32
+	name   string
+	rows   int
+	cols   int
+	stride int
+	es     []float32
 }
 
 func sigmoid(x float32) float32 {
@@ -21,23 +22,24 @@ func NewMat(rows, cols int, name string) *Mat {
 	es := make([]float32, rows*cols)
 
 	return &Mat{
-		name: name,
-		rows: rows,
-		cols: cols,
-		es:   es,
+		name:   name,
+		rows:   rows,
+		cols:   cols,
+		stride: cols,
+		es:     es,
 	}
 }
 
 func (m *Mat) Set(i, j int, val float32) {
-	m.es[i*m.cols+j] = val
+	m.es[i*m.stride+j] = val
 }
 
 func (m *Mat) At(i, j int) float32 {
-	return m.es[i*m.cols+j]
+	return m.es[i*m.stride+j]
 }
 
 func (m *Mat) IdxOf(i, j int) int {
-	return i*m.cols + j
+	return i*m.stride + j
 }
 
 func (m *Mat) Print() {
@@ -105,10 +107,11 @@ func (m *Mat) Row(rowIdx int) *Mat {
 	eIdx := sIdx + m.cols
 
 	return &Mat{
-		name: fmt.Sprintf("%s[%d:%d]", m.name, sIdx, eIdx),
-		rows: 1,
-		cols: m.cols,
-		es:   m.es[sIdx:eIdx],
+		name:   fmt.Sprintf("%s[%d:%d]", m.name, sIdx, eIdx),
+		rows:   1,
+		cols:   m.cols,
+		stride: m.stride,
+		es:     m.es[sIdx:eIdx],
 	}
 }
 
