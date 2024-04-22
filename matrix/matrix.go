@@ -30,6 +30,10 @@ func NewMat(rows, cols int, name string) *Mat {
 	}
 }
 
+func (m *Mat) SetArr(es []float32) {
+	m.es = es
+}
+
 func (m *Mat) SetStride(stride int) {
 	m.stride = stride
 }
