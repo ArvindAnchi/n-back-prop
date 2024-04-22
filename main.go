@@ -1,72 +1,64 @@
 package main
 
 import (
-	"log"
-	"math"
-	"math/rand/v2"
+	"fmt"
+
+	. "github.com/ArvindAnchi/n_back_prop/matrix"
 )
 
-func sigmoid(x float32) float32 {
-	return 1 / float32(1+math.Exp(float64(-x)))
+type XORModel struct {
+	a0 *Mat
+
+	w1, b1, a1 *Mat
+	w2, b2, a2 *Mat
 }
 
-func cost(train [4][3]float32, w1 float32, w2 float32, b float32) float32 {
-	var res float32 = 0
+func (m *XORModel) forward() {
+	m.a1.Dot(m.a0, m.w1)
+	m.a1.Sum(m.b1)
+	m.a1.Sigmoid()
 
-	for i := range train {
-		x1 := train[i][0]
-		x2 := train[i][1]
+	m.a2.Dot(m.a1, m.w2)
+	m.a2.Sum(m.b2)
+	m.a2.Sigmoid()
+}
 
-		y := sigmoid(w1*x1 + w2*x2 + b)
-
-		d := y - train[i][2]
-
-		res += d * d
-	}
-
-	return res / float32(len(train))
+func cost() {
 }
 
 func main() {
-	train := [4][3]float32{
-		{0, 0, 0},
-		{0, 1, 1},
-		{1, 0, 1},
-		{1, 1, 1},
-	}
+	var m XORModel
 
-	var eps float32 = 1e-2
-	var lr float32 = 1e-1
+	m.a0 = NewMat(1, 2, "x")
 
-	w1 := float32(rand.Float32())
-	w2 := float32(rand.Float32())
+	m.w1 = NewMat(2, 2, "w1")
+	m.b1 = NewMat(1, 2, "b1")
+	m.a1 = NewMat(1, 2, "a1")
 
-	b := float32(rand.Float32())
+	m.w2 = NewMat(2, 1, "w2")
+	m.b2 = NewMat(1, 1, "b2")
+	m.a2 = NewMat(1, 1, "a2")
 
-	log.Printf("Initial cost: %f W1: %f W2: %f B: %f", cost(train, w1, w2, b), w1, w2, b)
+	m.w1.Rand(0, 1)
+	m.b1.Rand(0, 1)
+	m.w2.Rand(0, 1)
+	m.b2.Rand(0, 1)
 
-	for i := 0; i < 4000; i++ {
-		c := cost(train, w1, w2, b)
+	m.a0.Set(0, 0, 0)
+	m.a0.Set(0, 1, 1)
 
-		dw1 := (cost(train, w1+eps, w2, b) - c) / eps
-		dw2 := (cost(train, w1, w2+eps, b) - c) / eps
-		db := (cost(train, w1, w2, b+eps) - c) / eps
+	m.w1.Print()
+	m.w1.Row(0).Print()
+	m.w1.Row(1).Print()
 
-		w1 -= lr * dw1
-		w2 -= lr * dw2
-		b -= lr * db
-	}
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 2; j++ {
+			m.a0.Set(0, 0, float32(i))
+			m.a0.Set(0, 1, float32(j))
 
-	log.Printf("Final cost: %f W1: %f W2: %f B: %f", cost(train, w1, w2, b), w1, w2, b)
+			m.forward()
 
-	log.Print("------------")
-
-	for i := range train {
-		x1 := train[i][0]
-		x2 := train[i][1]
-
-		y := sigmoid(w1*x1 + w1*x2 + b)
-
-		log.Printf("%f %f %f", x1, x2, y)
+			fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 0))
+		}
 	}
 }
