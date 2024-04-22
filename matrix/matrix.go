@@ -30,6 +30,10 @@ func NewMat(rows, cols int, name string) *Mat {
 	}
 }
 
+func (m *Mat) SetStride(stride int) {
+	m.stride = stride
+}
+
 func (m *Mat) Set(i, j int, val float32) {
 	m.es[i*m.stride+j] = val
 }
