@@ -80,6 +80,31 @@ func (m *Mat) Fill(val float32) {
 	}
 }
 
+func (m *Mat) Flip(fp float32) {
+	for i := 0; i < m.Rows; i++ {
+		for j := 0; j < m.Cols; j++ {
+			if rand.Float32() < fp {
+				m.es[m.IdxOf(i, j)] = -m.es[m.IdxOf(i, j)]
+			}
+		}
+	}
+}
+
+func (m *Mat) Nudge(nm *Mat, lr float32) {
+	if m.Cols != nm.Cols {
+		panic(fmt.Sprintf("MAT_NUDGE: Expected m:shape(%d %d) == nm:shape(%d %d)", m.Rows, m.Cols, nm.Rows, nm.Cols))
+	}
+	if m.Rows != nm.Rows {
+		panic(fmt.Sprintf("MAT_NUDGE: Expected m:shape(%d %d) == nm:shape(%d %d)", m.Rows, m.Cols, nm.Rows, nm.Cols))
+	}
+
+	for i := 0; i < m.Rows; i++ {
+		for j := 0; j < m.Cols; j++ {
+			m.es[m.IdxOf(i, j)] += nm.es[nm.IdxOf(i, j)] * lr
+		}
+	}
+}
+
 func (m *Mat) Rand(low, high float32) {
 	for i := 0; i < m.Rows; i++ {
 		for j := 0; j < m.Cols; j++ {
