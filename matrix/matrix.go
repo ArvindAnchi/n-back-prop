@@ -80,14 +80,16 @@ func (m *Mat) Fill(val float32) {
 	}
 }
 
-func (m *Mat) Flip(fp float32) {
+func (m *Mat) Flip(percent float32) *Mat {
 	for i := 0; i < m.Rows; i++ {
 		for j := 0; j < m.Cols; j++ {
-			if rand.Float32() < fp {
+			if rand.Float32() > percent {
 				m.es[m.IdxOf(i, j)] = -m.es[m.IdxOf(i, j)]
 			}
 		}
 	}
+
+	return m
 }
 
 func (m *Mat) Nudge(nm *Mat, lr float32) {
@@ -100,7 +102,7 @@ func (m *Mat) Nudge(nm *Mat, lr float32) {
 
 	for i := 0; i < m.Rows; i++ {
 		for j := 0; j < m.Cols; j++ {
-			m.es[m.IdxOf(i, j)] += nm.es[nm.IdxOf(i, j)] * lr
+			m.es[m.IdxOf(i, j)] += (nm.es[nm.IdxOf(i, j)] * lr)
 		}
 	}
 }
