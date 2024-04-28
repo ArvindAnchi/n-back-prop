@@ -15,48 +15,32 @@ type NN struct {
 	w2, b2, a2 *Mat
 }
 
+type GEN struct {
+	ti, to *Mat
+	io     *Mat
+}
+
 const LR = 2e-1
 
-func (m *NN) forward() {
-	m.a1.Dot(m.a0, m.w1)
-	m.a1.Sum(m.b1)
-	m.a1.Sigmoid()
-
-	m.a2.Dot(m.a1, m.w2)
-	m.a2.Sum(m.b2)
-	m.a2.Sigmoid()
-}
-
-func (m *NN) train(c float32) {
-	cd := m.cc - c
-	m.cc = c
-
-	m.w1.Nudge(m.w1, cd)
-	m.b1.Nudge(m.b1, cd)
-
-	m.w2.Nudge(m.w2, cd)
-	m.b2.Nudge(m.b2, cd)
-}
-
-func (m *NN) cost(ti Mat, to Mat) float32 {
-	if ti.Rows != to.Rows {
-		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", to.Rows, m.a2.Cols, ti.Rows, ti.Cols))
+func (m *NN) cost(gen GEN) float32 {
+	if gen.ti.Rows != gen.to.Rows {
+		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", gen.to.Rows, m.a2.Cols, gen.ti.Rows, gen.ti.Cols))
 	}
-	if to.Cols != m.a2.Cols {
-		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", to.Rows, m.a2.Cols, to.Rows, to.Cols))
+	if gen.to.Cols != m.a2.Cols {
+		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", gen.to.Rows, m.a2.Cols, gen.to.Rows, gen.to.Cols))
 	}
 
-	n := ti.Rows
+	n := gen.ti.Rows
 	var ci float32 = 0
 
 	for i := 0; i < n; i++ {
-		x := ti.Row(i)
-		y := to.Row(i)
+		x := gen.ti.Row(i)
+		y := gen.to.Row(i)
 
 		m.a0.Copy(x)
-		m.forward()
+		m.forward(gen)
 
-		q := to.Cols
+		q := gen.to.Cols
 
 		for j := 0; j < q; j++ {
 			d := m.a2.At(0, j) - y.At(0, j)
@@ -67,6 +51,16 @@ func (m *NN) cost(ti Mat, to Mat) float32 {
 	c := ci / float32(n)
 
 	return c
+}
+
+func (m *NN) forward(gen GEN) {
+	m.a1.Dot(m.a0, m.w1)
+	m.a1.Sum(m.b1)
+	m.a1.Sigmoid()
+
+	m.a2.Dot(m.a1, m.w2)
+	m.a2.Sum(m.b2)
+	m.a2.Sigmoid()
 }
 
 func main() {
@@ -80,15 +74,17 @@ func main() {
 	stride := 3
 	n := len(td) / stride
 
-	ti := NewMat(n, 2, "ti")
-	ti.SetStride(stride)
-	ti.SetArr(td)
-
-	to := NewMat(n, 1, "to")
-	to.SetStride(stride)
-	to.SetArr(td[2:])
-
 	var m NN
+	var g GEN
+
+	g.ti = NewMat(n, 2, "ti")
+	g.to = NewMat(n, 1, "to")
+
+	g.ti.SetStride(stride)
+	g.ti.SetArr(td)
+
+	g.to.SetStride(stride)
+	g.to.SetArr(td[2:])
 
 	m.a0 = NewMat(1, 2, "x")
 
@@ -108,22 +104,43 @@ func main() {
 	m.w2.Rand(0, 1)
 	m.b2.Rand(0, 1)
 
-	fmt.Printf("cost = %f\n", m.cost(*ti, *to))
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 2; j++ {
+			m.a0.Set(0, 0, float32(i))
+			m.a0.Set(0, 1, float32(j))
 
-	for k := 0; k < 100; k++ {
+			m.forward(g)
+
+			fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 0))
+		}
+	}
+
+	fmt.Print("------\n")
+
+	for k := 0; k < 10; k++ {
 		for i := 0; i < 2; i++ {
 			for j := 0; j < 2; j++ {
 				m.a0.Set(0, 0, float32(i))
 				m.a0.Set(0, 1, float32(j))
 
-				m.forward()
-				c := m.cost(*ti, *to)
-				m.train(c)
+				m.forward(g)
+				c := m.cost(g)
 
-				fmt.Printf("cost = %f\n", c)
-
-				// fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 0))
+				fmt.Printf("[T] cost = %f\n", c)
 			}
+		}
+	}
+
+	fmt.Print("------\n")
+
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 2; j++ {
+			m.a0.Set(0, 0, float32(i))
+			m.a0.Set(0, 1, float32(j))
+
+			m.forward(g)
+
+			fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 0))
 		}
 	}
 }
