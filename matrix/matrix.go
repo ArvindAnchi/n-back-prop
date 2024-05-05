@@ -7,7 +7,7 @@ import (
 )
 
 type Mat struct {
-	name   string
+	Name   string
 	Rows   int
 	Cols   int
 	stride int
@@ -22,7 +22,7 @@ func NewMat(rows, cols int, name string) *Mat {
 	es := make([]float32, rows*cols)
 
 	return &Mat{
-		name:   name,
+		Name:   name,
 		Rows:   rows,
 		Cols:   cols,
 		stride: cols,
@@ -51,7 +51,7 @@ func (m *Mat) IdxOf(i, j int) int {
 }
 
 func (m *Mat) Print() {
-	fmt.Printf("%s = [\n", m.name)
+	fmt.Printf("%s = [\n", m.Name)
 
 	for i := 0; i < m.Rows; i++ {
 		for j := 0; j < m.Cols; j++ {
@@ -142,7 +142,7 @@ func (m *Mat) Row(rowIdx int) *Mat {
 	eIdx := sIdx + m.Cols
 
 	return &Mat{
-		name:   fmt.Sprintf("%s[%d:%d]", m.name, sIdx, eIdx),
+		Name:   fmt.Sprintf("%s[%d:%d]", m.Name, sIdx, eIdx),
 		Rows:   1,
 		Cols:   m.Cols,
 		stride: m.stride,

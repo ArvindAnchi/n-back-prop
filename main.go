@@ -24,10 +24,10 @@ const LR = 2e-1
 
 func (m *NN) cost(gen GEN) float32 {
 	if gen.ti.Rows != gen.to.Rows {
-		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", gen.to.Rows, m.a2.Cols, gen.ti.Rows, gen.ti.Cols))
+		panic(fmt.Sprintf("M_COST: [%s] Expected shape:(%d %d) got (%d %d)", gen.ti.Name, gen.to.Rows, m.a2.Cols, gen.ti.Rows, gen.ti.Cols))
 	}
 	if gen.to.Cols != m.a2.Cols {
-		panic(fmt.Sprintf("M_COST: Expected shape:(%d %d) got (%d %d)", gen.to.Rows, m.a2.Cols, gen.to.Rows, gen.to.Cols))
+		panic(fmt.Sprintf("M_COST: [%s] Expected shape:(%d %d) got (%d %d)", gen.ti.Name, gen.to.Rows, m.a2.Cols, gen.to.Rows, gen.to.Cols))
 	}
 
 	n := gen.ti.Rows
@@ -38,7 +38,7 @@ func (m *NN) cost(gen GEN) float32 {
 		y := gen.to.Row(i)
 
 		m.a0.Copy(x)
-		m.forward(gen)
+		m.forward(nil)
 
 		q := gen.to.Cols
 
@@ -53,7 +53,7 @@ func (m *NN) cost(gen GEN) float32 {
 	return c
 }
 
-func (m *NN) forward(gen GEN) {
+func (m *NN) forward(gen *GEN) {
 	m.a1.Dot(m.a0, m.w1)
 	m.a1.Sum(m.b1)
 	m.a1.Sigmoid()
@@ -61,24 +61,28 @@ func (m *NN) forward(gen GEN) {
 	m.a2.Dot(m.a1, m.w2)
 	m.a2.Sum(m.b2)
 	m.a2.Sigmoid()
+
+	if gen != nil {
+
+	}
 }
 
 func main() {
 	td := []float32{
-		0, 0, 0,
-		0, 1, 1,
-		1, 0, 1,
-		1, 1, 0,
+		0, 0, 1, 0,
+		0, 1, 0, 1,
+		1, 0, 0, 1,
+		1, 1, 1, 0,
 	}
 
-	stride := 3
+	stride := 4
 	n := len(td) / stride
 
 	var m NN
 	var g GEN
 
 	g.ti = NewMat(n, 2, "ti")
-	g.to = NewMat(n, 1, "to")
+	g.to = NewMat(n, 2, "to")
 
 	g.ti.SetStride(stride)
 	g.ti.SetArr(td)
@@ -86,15 +90,15 @@ func main() {
 	g.to.SetStride(stride)
 	g.to.SetArr(td[2:])
 
-	m.a0 = NewMat(1, 2, "x")
+	m.a0 = NewMat(1, 2, "a0")
 
 	m.w1 = NewMat(2, 2, "w1")
 	m.b1 = NewMat(1, 2, "b1")
 	m.a1 = NewMat(1, 2, "a1")
 
-	m.w2 = NewMat(2, 1, "w2")
-	m.b2 = NewMat(1, 1, "b2")
-	m.a2 = NewMat(1, 1, "a2")
+	m.w2 = NewMat(2, 2, "w2")
+	m.b2 = NewMat(1, 2, "b2")
+	m.a2 = NewMat(1, 2, "a2")
 
 	m.a0.Set(0, 0, 0)
 	m.a0.Set(0, 1, 1)
@@ -109,26 +113,30 @@ func main() {
 			m.a0.Set(0, 0, float32(i))
 			m.a0.Set(0, 1, float32(j))
 
-			m.forward(g)
+			m.forward(nil)
 
-			fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 0))
+			fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 1)-m.a2.At(0, 0))
 		}
 	}
 
 	fmt.Print("------\n")
 
 	for k := 0; k < 10; k++ {
+		fmt.Print("[T] Cost: ")
+
 		for i := 0; i < 2; i++ {
 			for j := 0; j < 2; j++ {
 				m.a0.Set(0, 0, float32(i))
 				m.a0.Set(0, 1, float32(j))
 
-				m.forward(g)
+				m.forward(&g)
 				c := m.cost(g)
 
-				fmt.Printf("[T] cost = %f\n", c)
+				fmt.Printf("[%d ^ %d]=%f ", i, j, c)
 			}
 		}
+
+		fmt.Print("\n")
 	}
 
 	fmt.Print("------\n")
@@ -138,9 +146,9 @@ func main() {
 			m.a0.Set(0, 0, float32(i))
 			m.a0.Set(0, 1, float32(j))
 
-			m.forward(g)
+			m.forward(nil)
 
-			fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 0))
+			fmt.Printf("%d ^ %d = %f\n", i, j, m.a2.At(0, 1)-m.a2.At(0, 0))
 		}
 	}
 }
